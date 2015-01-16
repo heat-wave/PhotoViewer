@@ -28,7 +28,7 @@ public class DownloadImagesTask extends AsyncTask<String, Void, ArrayList<Bitmap
 
         searchParameters.setTags(params);
         try {
-            photos = photosInterface.search(searchParameters, 10, 1);
+            photos = photosInterface.getRecent(null, 10, 1);
             for (int i = 0; i < photos.size(); i++) {
                 Photo photo = photos.get(i);
                 URL photoURL = new URL("https://farm" + photo.getFarm() +
