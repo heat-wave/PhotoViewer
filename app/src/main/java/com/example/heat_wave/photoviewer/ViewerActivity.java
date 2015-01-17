@@ -27,7 +27,7 @@ public class ViewerActivity extends ActionBarActivity
     private RecyclerView.Adapter photoAdapter;
     private RecyclerView.LayoutManager photoLayoutManager;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private ArrayList<Bitmap> photoList;
+    private ArrayList<Bitmap> photoList, auxList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,10 +49,10 @@ public class ViewerActivity extends ActionBarActivity
         // specify an adapter (see also next example)
 
 
-        photoList = new ArrayList<>();
-        new FiveHundredSearchTask(ViewerActivity.this).execute();
-        photoAdapter = new PhotoAdapter(photoList);
-        photoView.setAdapter(photoAdapter);
+        photoList = new ArrayList<Bitmap>();
+        new FiveHundredSearchTask(this).execute();
+        Debug.waitForDebugger();
+
     }
 
     @Override
@@ -78,12 +78,16 @@ public class ViewerActivity extends ActionBarActivity
 
     public void onSearchFinished(ArrayList<Photo> photos) {
         for (Photo photo : photos) {
-            new DownloadImagesTask(ViewerActivity.this).execute(photo);
+            new DownloadImagesTask(this).execute(photo);
         }
     }
 
     public void onImageDownloaded(Photo photo) {
         photoList.add(photo.getThumbnail());
+        if (photoList.size() == 20) {
+            photoAdapter = new PhotoAdapter(photoList);
+            photoView.setAdapter(photoAdapter);
+        }
     }
 
     @Override

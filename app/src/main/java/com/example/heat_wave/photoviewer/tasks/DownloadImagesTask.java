@@ -28,14 +28,12 @@ public class DownloadImagesTask extends AsyncTask<Photo, Void, Photo> {
             String fullURL = photo.getFullURL();
             InputStream isFull = (InputStream) new URL(fullURL).getContent();
             InputStream isThumbnail = (InputStream) new URL(thumbnailURL).getContent();
-            String[] pathThumbnail = thumbnailURL.split("/");
-            String[] pathFull = fullURL.split("/");
             photo.setThumbnail(BitmapFactory.decodeStream(isThumbnail));
             photo.setFull(BitmapFactory.decodeStream(isFull));
             return photo;
         } catch (Exception e) {
             Log.e(TAG, "Download Failed.", e);
-            return null;
+            return photo;
         }
     }
 
