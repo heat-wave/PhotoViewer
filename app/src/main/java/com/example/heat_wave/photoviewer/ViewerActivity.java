@@ -1,20 +1,16 @@
 package com.example.heat_wave.photoviewer;
 
-import android.app.ProgressDialog;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Debug;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.GridView;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.heat_wave.photoviewer.auxiliary.PhotoAdapter;
@@ -24,38 +20,42 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
 
-public class ViewerActivity extends ActionBarActivity {
+public class ViewerActivity extends ActionBarActivity implements SwipeRefreshLayout.OnRefreshListener {
 
-    private GridView gridView;
-    private PhotoAdapter customGridAdapter;
-    Context context;
-    ProgressDialog dialog;
+    private RecyclerView photoView;
+    private RecyclerView.Adapter photoAdapter;
+    private RecyclerView.LayoutManager photoLayoutManager;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.refresh);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
         setContentView(R.layout.activity_viewer);
-        context = this;
+        photoView = (RecyclerView) findViewById(R.id.cardList);
 
-        gridView = (GridView) findViewById(R.id.gridView);
+        // use this setting to improve performance if you know that changes
+        // in content do not change the layout size of the RecyclerView
+        photoView.setHasFixedSize(true);
+
+        // use a linear layout manager
+        photoLayoutManager = new GridLayoutManager(this, 3);
+        photoView.setLayoutManager(photoLayoutManager);
+
+        // specify an adapter (see also next example)
+
+
+        ArrayList<Bitmap> photoList = new ArrayList<>();
         try {
-            customGridAdapter = new PhotoAdapter(this, R.layout.row_grid,
-                    new DownloadImagesTask().execute().get());
+            //photoList = new DownloadImagesTask(this).execute().get();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
             e.printStackTrace();
         }
-        gridView.setAdapter(customGridAdapter);
-
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View v,
-                                    int position, long id) {
-                Toast.makeText(ViewerActivity.this, position + "#Selected",
-                        Toast.LENGTH_SHORT).show();
-            }
-
-        });
+        photoAdapter = new PhotoAdapter(photoList);
+        photoView.setAdapter(photoAdapter);
     }
 
     @Override
@@ -67,47 +67,33 @@ public class ViewerActivity extends ActionBarActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle item selection
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
-    public boolean swapContent(MenuItem item) {
-        Debug.waitForDebugger();
-/*        Thread t = new Thread(new Runnable() {
+    @Override
+    public void onRefresh() {
+        // говорим о том, что собираемся начать
+        //Toast.makeText(this, R.string.refresh_started, Toast.LENGTH_SHORT).show();
+        // начинаем показывать прогресс
+        mSwipeRefreshLayout.setRefreshing(true);
+        // ждем 3 секунды и прячем прогресс
+        mSwipeRefreshLayout.postDelayed(new Runnable() {
             @Override
             public void run() {
-                dialog = new ProgressDialog(context);
-                dialog.setMessage("Refresh");
-                dialog.setIndeterminate(true);
-                dialog.show();
+                mSwipeRefreshLayout.setRefreshing(false);
+                // говорим о том, что собираемся закончить
+                //Toast.makeText(MainActivity.this, R.string.refresh_finished, Toast.LENGTH_SHORT).show();
             }
-        });
-        t.start();*/
-        //setContentView(R.layout.splash_screen);
-                /**/
-        customGridAdapter.clear();
-        try {
-            customGridAdapter = (PhotoAdapter) gridView.getAdapter();
-            customGridAdapter.clear();
-            customGridAdapter.add(new DownloadImagesTask().execute().get());
-            //customGridAdapter.notifyDataSetChanged();
-            gridView.setAdapter(customGridAdapter);
-            gridView.invalidateViews();
-            gridView.scrollBy(0, 0);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
-        //dialog.dismiss();
-        //setContentView(R.layout.activity_viewer);
-        //return true;
-        /*try {
-            dialog.dismiss();
-            t.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }*/
-        return true;
+        }, 3000);
     }
 }

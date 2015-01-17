@@ -1,27 +1,51 @@
 package com.example.heat_wave.photoviewer.models;
 
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 /**
  * Created by heat_wave on 14.01.15.
  */
 
 public class Photo {
-    private String url;
-    private Drawable drawable;
+    private String thumbnailURL;
+    private String fullURL;
+    private Bitmap full;
+    private Bitmap thumbnail;
 
-    public Photo(String url) {
-        this.url = url;
+    public Bitmap getThumbnail() {
+        return thumbnail;
     }
 
-    public String getUrl() {
-        return url;
+    public void setThumbnail(Bitmap thumbnail) {
+        this.thumbnail = thumbnail;
     }
 
-    public Drawable getDrawable() {
-        return drawable;
+    public Bitmap getFull() {
+        return full;
     }
 
-    public void setDrawable(Drawable drawable) {
-        this.drawable = drawable;
+    public void setFull(Bitmap full) {
+        this.full = full;
+    }
+
+    public String getThumbnailURL() {
+        return thumbnailURL;
+    }
+
+    public void setThumbnailURL(String thumbnailURL) {
+        this.thumbnailURL = thumbnailURL;
+    }
+
+    public Photo(String thumbnailURL, String fullURL) {
+        this.thumbnailURL = thumbnailURL;
+        this.fullURL = fullURL;
+    }
+
+    public String getFullURL() {
+        return fullURL;
+    }
+
+    public void setFullURL(String fullURL) {
+        this.fullURL = fullURL;
     }
 }
