@@ -7,32 +7,35 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.example.heat_wave.photoviewer.auxiliary.PhotoAdapter;
+import com.example.heat_wave.photoviewer.models.Photo;
 import com.example.heat_wave.photoviewer.tasks.DownloadImagesTask;
+import com.example.heat_wave.photoviewer.tasks.FiveHundredSearchTask;
 
 import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
 
 
-public class ViewerActivity extends ActionBarActivity implements SwipeRefreshLayout.OnRefreshListener {
+public class ViewerActivity extends ActionBarActivity
+        implements SwipeRefreshLayout.OnRefreshListener {
 
     private RecyclerView photoView;
     private RecyclerView.Adapter photoAdapter;
     private RecyclerView.LayoutManager photoLayoutManager;
     private SwipeRefreshLayout mSwipeRefreshLayout;
+    private ArrayList<Bitmap> photoList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_viewer);
+        Debug.waitForDebugger();
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.refresh);
         mSwipeRefreshLayout.setOnRefreshListener(this);
-        setContentView(R.layout.activity_viewer);
         photoView = (RecyclerView) findViewById(R.id.cardList);
 
         // use this setting to improve performance if you know that changes
@@ -46,14 +49,8 @@ public class ViewerActivity extends ActionBarActivity implements SwipeRefreshLay
         // specify an adapter (see also next example)
 
 
-        ArrayList<Bitmap> photoList = new ArrayList<>();
-        try {
-            //photoList = new DownloadImagesTask(this).execute().get();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
+        photoList = new ArrayList<>();
+        new FiveHundredSearchTask(ViewerActivity.this).execute();
         photoAdapter = new PhotoAdapter(photoList);
         photoView.setAdapter(photoAdapter);
     }
@@ -76,17 +73,23 @@ public class ViewerActivity extends ActionBarActivity implements SwipeRefreshLay
         if (id == R.id.action_settings) {
             return true;
         }
-
         return super.onOptionsItemSelected(item);
+    }
+
+    public void onSearchFinished(ArrayList<Photo> photos) {
+        for (Photo photo : photos) {
+            new DownloadImagesTask(ViewerActivity.this).execute(photo);
+        }
+    }
+
+    public void onImageDownloaded(Photo photo) {
+        photoList.add(photo.getThumbnail());
     }
 
     @Override
     public void onRefresh() {
-        // говорим о том, что собираемся начать
         //Toast.makeText(this, R.string.refresh_started, Toast.LENGTH_SHORT).show();
-        // начинаем показывать прогресс
         mSwipeRefreshLayout.setRefreshing(true);
-        // ждем 3 секунды и прячем прогресс
         mSwipeRefreshLayout.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -94,6 +97,6 @@ public class ViewerActivity extends ActionBarActivity implements SwipeRefreshLay
                 // говорим о том, что собираемся закончить
                 //Toast.makeText(MainActivity.this, R.string.refresh_finished, Toast.LENGTH_SHORT).show();
             }
-        }, 3000);
+        }, 300);
     }
 }

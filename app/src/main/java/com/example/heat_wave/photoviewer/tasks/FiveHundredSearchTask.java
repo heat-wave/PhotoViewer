@@ -16,7 +16,7 @@ public class FiveHundredSearchTask extends AsyncTask<Void, Void, ArrayList<Photo
     ViewerActivity activity;
     public static final String TAG = "500px";
 
-    public static final String API_KEY = "";
+    public static final String API_KEY = "GW8UFBIcTAAidXLYXun9kVIj1NV5OfYRhjPshygw";
 
     public FiveHundredSearchTask(ViewerActivity activity) {
         this.activity = activity;
@@ -24,6 +24,7 @@ public class FiveHundredSearchTask extends AsyncTask<Void, Void, ArrayList<Photo
 
     @Override
     protected ArrayList<Photo> doInBackground(Void... voids) {
+
         FiveHundredQuery fiveHundredQuery = new FiveHundredQuery(API_KEY);
         fiveHundredQuery.addParameter("image_size[]", "3");
         fiveHundredQuery.addParameter("image_size[]", "4");
@@ -51,6 +52,6 @@ public class FiveHundredSearchTask extends AsyncTask<Void, Void, ArrayList<Photo
     @Override
     protected void onPostExecute(ArrayList<Photo> photos) {
         super.onPostExecute(photos);
-        //activity.onSearchFinished(photos);
+        activity.onSearchFinished(photos);
     }
 }

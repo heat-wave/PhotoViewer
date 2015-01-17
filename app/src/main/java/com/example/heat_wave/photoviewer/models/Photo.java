@@ -1,7 +1,6 @@
 package com.example.heat_wave.photoviewer.models;
 
 import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
 /**
  * Created by heat_wave on 14.01.15.
  */
