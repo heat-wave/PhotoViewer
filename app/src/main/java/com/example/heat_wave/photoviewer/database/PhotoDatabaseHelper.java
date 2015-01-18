@@ -28,8 +28,8 @@ public class PhotoDatabaseHelper extends SQLiteOpenHelper {
 
     // Books Table Columns names
     private static final String KEY_ID = "id";
-    private static final String KEY_THUMBNAILURL = "thumbnailURL";
-    private static final String KEY_FULLURL = "fullURL";
+    private static final String KEY_THUMBNAILURL = "thumbnailurl";
+    private static final String KEY_FULLURL = "fullurl";
     private static final String KEY_THUMBNAIL = "thumbnail";
     private static final String KEY_FULL = "full";
 
@@ -45,8 +45,8 @@ public class PhotoDatabaseHelper extends SQLiteOpenHelper {
         // SQL statement to create table
         String CREATE_TABLE = "CREATE TABLE photos ( " +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "thumbnailURL TEXT, " +
-                "fullURL TEXT, " +
+                "thumbnailurl TEXT, " +
+                "fullurl TEXT, " +
                 "full BLOB, " +
                 "thumbnail BLOB)";
 
@@ -132,11 +132,24 @@ public class PhotoDatabaseHelper extends SQLiteOpenHelper {
     }
 
     public int getPhotosCount() {
-        String countQuery = "SELECT  * FROM " + TABLE_PHOTOS;
+        String countQuery = "SELECT * FROM " + TABLE_PHOTOS;
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(countQuery, null);
         int cnt = cursor.getCount();
         cursor.close();
         return cnt;
     }
+
+    public String getLink(int id) {
+        String countQuery = "SELECT fullurl FROM photos where id=" + id;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(countQuery, null);
+        if (cursor.moveToFirst()){
+            String link = cursor.getString(0);
+            cursor.close();
+            return link;
+        }
+        return null;
+    }
+
 }

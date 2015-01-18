@@ -13,6 +13,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 
 import com.example.heat_wave.photoviewer.auxiliary.PhotoAdapter;
 import com.example.heat_wave.photoviewer.auxiliary.SpacesItemDecoration;
@@ -31,7 +32,7 @@ public class ViewerActivity extends ActionBarActivity
     private RecyclerView.LayoutManager photoLayoutManager;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private ArrayList<Bitmap> thumbnailList;
-    private ArrayList<Bitmap> fullList;
+    ProgressBar progressBar;
     PhotoDatabaseHelper db;
 
     @Override
@@ -42,14 +43,12 @@ public class ViewerActivity extends ActionBarActivity
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.refresh);
         mSwipeRefreshLayout.setOnRefreshListener(this);
         photoView = (RecyclerView) findViewById(R.id.cardList);
-
         photoView.setHasFixedSize(true);
-
         photoLayoutManager = new GridLayoutManager(this, 3);
         photoView.setLayoutManager(photoLayoutManager);
-
+        progressBar = (ProgressBar) findViewById(R.id.progress);
+        progressBar.setMax(20);
         thumbnailList = new ArrayList<Bitmap>();
-        fullList = new ArrayList<Bitmap>();
 
         if (db.getPhotosCount() == 0)
             new FiveHundredSearchTask(this).execute();
@@ -87,12 +86,16 @@ public class ViewerActivity extends ActionBarActivity
 
     public void onImageDownloaded(Photo photo) {
         db.addPhoto(photo);
+        if (progressBar.getVisibility() == View.VISIBLE)
+            progressBar.setProgress(progressBar.getProgress() + 1);
     }
 
     @Override
     public void onRefresh() {
         mSwipeRefreshLayout.setRefreshing(true);
+        progressBar.setVisibility(View.VISIBLE);
 
+        progressBar.setProgress(0);
         db.onUpgrade(db.getWritableDatabase(), 1, 2);
         thumbnailList.clear();
         new FiveHundredSearchTask(this).execute();
@@ -108,6 +111,8 @@ public class ViewerActivity extends ActionBarActivity
                 mSwipeRefreshLayout.setRefreshing(false);
             }
         }, 500);
+        progressBar.setProgress(0);
+        progressBar.setVisibility(View.INVISIBLE);
     }
 
     public void watchFull(View v) {
