@@ -1,9 +1,9 @@
 package com.example.heat_wave.photoviewer;
 
-import android.database.sqlite.SQLiteOpenHelper;
+import android.content.Intent;
 import android.graphics.Bitmap;
-import android.os.AsyncTask;
-import android.os.Debug;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -11,16 +11,17 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
+import android.view.View;
+import android.widget.ImageView;
 
 import com.example.heat_wave.photoviewer.auxiliary.PhotoAdapter;
+import com.example.heat_wave.photoviewer.auxiliary.SpacesItemDecoration;
 import com.example.heat_wave.photoviewer.database.PhotoDatabaseHelper;
 import com.example.heat_wave.photoviewer.models.Photo;
 import com.example.heat_wave.photoviewer.tasks.DownloadImagesTask;
 import com.example.heat_wave.photoviewer.tasks.FiveHundredSearchTask;
 
 import java.util.ArrayList;
-
 
 public class ViewerActivity extends ActionBarActivity
         implements SwipeRefreshLayout.OnRefreshListener {
@@ -29,54 +30,49 @@ public class ViewerActivity extends ActionBarActivity
     private RecyclerView.Adapter photoAdapter;
     private RecyclerView.LayoutManager photoLayoutManager;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private ArrayList<Bitmap> photoList;
+    private ArrayList<Bitmap> thumbnailList;
+    private ArrayList<Bitmap> fullList;
     PhotoDatabaseHelper db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         db = new PhotoDatabaseHelper(this);
-        //db.onUpgrade(db.getWritableDatabase(), 1, 1);
         setContentView(R.layout.activity_viewer);
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.refresh);
         mSwipeRefreshLayout.setOnRefreshListener(this);
         photoView = (RecyclerView) findViewById(R.id.cardList);
 
-        // use this setting to improve performance if you know that changes
-        // in content do not change the layout size of the RecyclerView
         photoView.setHasFixedSize(true);
 
-        // use a linear layout manager
-        photoLayoutManager = new GridLayoutManager(this, 2);
+        photoLayoutManager = new GridLayoutManager(this, 3);
         photoView.setLayoutManager(photoLayoutManager);
 
-        // specify an adapter (see also next example)
+        thumbnailList = new ArrayList<Bitmap>();
+        fullList = new ArrayList<Bitmap>();
 
-        photoList = new ArrayList<Bitmap>();
-        new FiveHundredSearchTask(this).execute();
+        if (db.getPhotosCount() == 0)
+            new FiveHundredSearchTask(this).execute();
         for (int i = 1; i <= 20; i++) {
-            photoList.add(db.getImage(i));
+            thumbnailList.add(db.getImageThumbnail(i));
         }
-        PhotoAdapter photoAdapter = new PhotoAdapter(photoList);
+        photoView.addItemDecoration(new SpacesItemDecoration(30));
+        PhotoAdapter photoAdapter = new PhotoAdapter(thumbnailList);
         photoView.setAdapter(photoAdapter);
 
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_viewer, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
         }
@@ -95,16 +91,37 @@ public class ViewerActivity extends ActionBarActivity
 
     @Override
     public void onRefresh() {
-        //Toast.makeText(this, R.string.refresh_started, Toast.LENGTH_SHORT).show();
         mSwipeRefreshLayout.setRefreshing(true);
+
+        db.onUpgrade(db.getWritableDatabase(), 1, 2);
+        thumbnailList.clear();
+        new FiveHundredSearchTask(this).execute();
+        for (int i = 1; i <= 20; i++) {
+            thumbnailList.add(db.getImageThumbnail(i));
+        }
+        photoAdapter = new PhotoAdapter(thumbnailList);
+        photoAdapter.notifyDataSetChanged();
 
         mSwipeRefreshLayout.postDelayed(new Runnable() {
             @Override
             public void run() {
                 mSwipeRefreshLayout.setRefreshing(false);
-                // говорим о том, что собираемся закончить
-                //Toast.makeText(MainActivity.this, R.string.refresh_finished, Toast.LENGTH_SHORT).show();
             }
-        }, 300);
+        }, 500);
+    }
+
+    public void watchFull(View v) {
+        ImageView photo = (ImageView) v;
+        Bitmap compare =((BitmapDrawable)photo.getDrawable()).getBitmap();
+        int pos = 0;
+        for (int i = 0; i < 20; i++) {
+            if (compare.equals(thumbnailList.get(i))) {
+                pos = i;
+                break;
+            }
+        }
+        Intent i = new Intent(this, PhotoSlideActivity.class);
+        i.putExtra("POSITION", pos);
+        startActivity(i);
     }
 }

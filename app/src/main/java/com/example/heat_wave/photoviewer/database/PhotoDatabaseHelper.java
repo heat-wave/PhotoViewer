@@ -47,8 +47,8 @@ public class PhotoDatabaseHelper extends SQLiteOpenHelper {
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "thumbnailURL TEXT, " +
                 "fullURL TEXT, " +
-                "thumbnail BLOB, " +
-                "full BLOB)";
+                "full BLOB, " +
+                "thumbnail BLOB)";
 
         // create table
         db.execSQL(CREATE_TABLE);
@@ -93,7 +93,26 @@ public class PhotoDatabaseHelper extends SQLiteOpenHelper {
         return outputStream.toByteArray();
     }
 
-    public Bitmap getImage(int i){
+    public Bitmap getImageThumbnail(int i){
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String query = "select full from photos where id=" + i ;
+        Cursor cur = db.rawQuery(query, null);
+        Bitmap bitmap = null;
+
+        if (cur.moveToFirst()){
+            byte[] imgByte = cur.getBlob(0);
+            cur.close();
+            bitmap = BitmapFactory.decodeByteArray(imgByte, 0, imgByte.length);
+        }
+        if (cur != null && !cur.isClosed()) {
+            cur.close();
+        }
+        return bitmap;
+    }
+
+    public Bitmap getImageFull(int i){
 
         SQLiteDatabase db = this.getReadableDatabase();
 
@@ -110,5 +129,14 @@ public class PhotoDatabaseHelper extends SQLiteOpenHelper {
             cur.close();
         }
         return bitmap;
+    }
+
+    public int getPhotosCount() {
+        String countQuery = "SELECT  * FROM " + TABLE_PHOTOS;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(countQuery, null);
+        int cnt = cursor.getCount();
+        cursor.close();
+        return cnt;
     }
 }
