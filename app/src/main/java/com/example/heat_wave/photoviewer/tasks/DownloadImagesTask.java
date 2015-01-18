@@ -21,7 +21,6 @@ public class DownloadImagesTask extends AsyncTask<Photo, Void, Photo> {
 
     @Override
     protected Photo doInBackground(Photo... photos) {
-        Debug.waitForDebugger();
         Photo photo = photos[0];
         try {
             String thumbnailURL = photo.getThumbnailURL();

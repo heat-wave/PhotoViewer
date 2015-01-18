@@ -1,5 +1,6 @@
 package com.example.heat_wave.photoviewer;
 
+import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Debug;
@@ -13,6 +14,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.example.heat_wave.photoviewer.auxiliary.PhotoAdapter;
+import com.example.heat_wave.photoviewer.database.PhotoDatabaseHelper;
 import com.example.heat_wave.photoviewer.models.Photo;
 import com.example.heat_wave.photoviewer.tasks.DownloadImagesTask;
 import com.example.heat_wave.photoviewer.tasks.FiveHundredSearchTask;
@@ -27,13 +29,15 @@ public class ViewerActivity extends ActionBarActivity
     private RecyclerView.Adapter photoAdapter;
     private RecyclerView.LayoutManager photoLayoutManager;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private ArrayList<Bitmap> photoList, auxList;
+    private ArrayList<Bitmap> photoList;
+    PhotoDatabaseHelper db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        db = new PhotoDatabaseHelper(this);
+        //db.onUpgrade(db.getWritableDatabase(), 1, 1);
         setContentView(R.layout.activity_viewer);
-        Debug.waitForDebugger();
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.refresh);
         mSwipeRefreshLayout.setOnRefreshListener(this);
         photoView = (RecyclerView) findViewById(R.id.cardList);
@@ -43,15 +47,18 @@ public class ViewerActivity extends ActionBarActivity
         photoView.setHasFixedSize(true);
 
         // use a linear layout manager
-        photoLayoutManager = new GridLayoutManager(this, 3);
+        photoLayoutManager = new GridLayoutManager(this, 2);
         photoView.setLayoutManager(photoLayoutManager);
 
         // specify an adapter (see also next example)
 
-
         photoList = new ArrayList<Bitmap>();
         new FiveHundredSearchTask(this).execute();
-        Debug.waitForDebugger();
+        for (int i = 1; i <= 20; i++) {
+            photoList.add(db.getImage(i));
+        }
+        PhotoAdapter photoAdapter = new PhotoAdapter(photoList);
+        photoView.setAdapter(photoAdapter);
 
     }
 
@@ -83,17 +90,14 @@ public class ViewerActivity extends ActionBarActivity
     }
 
     public void onImageDownloaded(Photo photo) {
-        photoList.add(photo.getThumbnail());
-        if (photoList.size() == 20) {
-            photoAdapter = new PhotoAdapter(photoList);
-            photoView.setAdapter(photoAdapter);
-        }
+        db.addPhoto(photo);
     }
 
     @Override
     public void onRefresh() {
         //Toast.makeText(this, R.string.refresh_started, Toast.LENGTH_SHORT).show();
         mSwipeRefreshLayout.setRefreshing(true);
+
         mSwipeRefreshLayout.postDelayed(new Runnable() {
             @Override
             public void run() {

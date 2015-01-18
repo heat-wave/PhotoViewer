@@ -1,4 +1,4 @@
-package com.example.heat_wave.photoviewer;
+package com.example.heat_wave.photoviewer.auxiliary;
 
 /**
  * Created by heat_wave on 17.01.15.
